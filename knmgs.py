@@ -19,7 +19,7 @@ from discord.ext import commands
 
 # ======================================================================================================================
 
-TOKEN = "NjAzMDkyMTk2ODExNjAzOTY5.XTaYCw.5ENSGYWebsoGZy-2eHoIBOhCygk"
+TOKEN = #TOKEN HERE AS STRING
 BOT_PREFIX = "=="
 activity = discord.Game(name="Game Selector")
 
