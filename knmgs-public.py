@@ -34,6 +34,10 @@ BOT TOKEN NOTE:
     their developer console on discord.com for more information.
 
 PATCH NOTES:
+V0.3.1 -
+* Messed up 0.3.0 patch notes. Those have been corrected to reflect actual changes below. (Still dealing with the
+    public and beta instances confusing me what is released and what is not. My bad.)
+
 V0.3.0 -
 * Updated license to use to GPL-3.0.
 * Updated Content Notice.
@@ -41,8 +45,8 @@ V0.3.0 -
     the exit() call. Still working on that...
 * Modified randomlist generation so that anytime it selects League of Legends, it appends a random LoL game mode to the
     string.
-* Added more content to the statusList.
 * Removed parody and dark humored content. Users can decide that.
+* gamelist and statuslist are now empty. Users can decide those too.
 * Changed the order of patch notes so that the most recent is at the top.
 * Updated the name of the file to match the public instance of this code on GitHub to reduce my confusion.
 
