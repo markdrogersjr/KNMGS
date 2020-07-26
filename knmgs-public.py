@@ -2,10 +2,10 @@
 Kira 'n Mark's Game Selector
 Idea by Kira Than
 Code by Mark Rogers
-https://github.com/OmniZeal/KNMGS
-Version: 0.3.2
+https://github.com/markdrogersjr/KNMGS
+Version: 0.3.3
 Written with Python 3.6
-Utilizes Discord.py 1.3.0a
+Utilizes Discord.py 1.3.4
 https://github.com/Rapptz/discord.py
 
 knmgs-public.py LICENSE TO USE:
@@ -69,6 +69,12 @@ PYTHON VERSION NOTICE:
     continues to work.
 
 PATCH NOTES:
+V0.3.3 -
+* Converted timers to datetime methods, associating real-time checks rather than incrementing counters.
+* Added categories to functions.
+* Updated to Discord.py 1.3.4 - Please ensure to update your personal instances due to recent changes with Discord
+    Development support.
+
 V0.3.2 -
 * Added duplicate prevention to the add function to prevent repeat items in list.
 * Added stop_daily, command 'stop', to provide an exit to the daily function, stopping the timer with a flag.
@@ -108,7 +114,6 @@ V0.2.2 -
 * Added a remove game from list feature to allow users to remove games from the game list.
 
 Patch & Feature Road-map:
-* Daily Game active flag to track when the counter is on and off to prevent multiple instances
 * Modify message system to produce embedded messages for beautification
 * Add a game questionnaire that runs a logic test on the user to produce a random game.
 * delete_after statements for user messages specifically to bot.
@@ -182,22 +187,23 @@ async def on_ready():
     print('BOT LOGS:')
 
     print(str(datetime.datetime.now()) + ': Status Timer initializing...')
+    statusTimerDelta = datetime.timedelta(minutes=30)
+    statusTimerStart = datetime.datetime.now()
 
-    while count < 14400:
-        await asyncio.sleep(0.999)
-        count = count + 1
-
-        if count == 14400:
-            print(str(datetime.datetime.now()) + ': Status Timer complete... Timer: ' + str(count))
-            count = 0
+    while True:
+        await asyncio.sleep(0.9)
+        statusTimerCheck = datetime.datetime.now() - statusTimerStart
+        if statusTimerCheck >= statusTimerDelta:
+            print(str(datetime.datetime.now()) + ': Status Timer complete...')
             activity = discord.Game(name=random.choice(statusList))
             await bot.change_presence(activity=activity)
-            print(str(datetime.datetime.now()) + ': Status Changed! Starting new Status Timer: ' + str(count))
+            statusTimerStart = datetime.datetime.now()
+            print(str(datetime.datetime.now()) + ': Status Changed! Starting new Status Timer.')
 
 
 # Request Adds a specified game to the list
 # ======================================================================================================================
-@bot.command(name='add', description='Adds a new game to the list', pass_context=True)
+@bot.command(name='add', description='Adds a new game to the list', pass_context=True, category="List Actions")
 async def add_to_list(ctx):
     print(str(datetime.datetime.now()) + ': add_to_list executed')
     await ctx.send('What game do you want to add to the list?', delete_after=30.0)
@@ -206,7 +212,7 @@ async def add_to_list(ctx):
     for i in gameList:
         if i == str(newGame.content):
             await ctx.send('ERROR: ' + str(newGame.content) + ' is already in the list! Try ' + BOT_PREFIX +
-                           'add again with a different game.')
+                           'add again with a different game.', delete_after=30.0)
             print(str(datetime.datetime.now()) + ': add_to_list Failed: newGame already in gameList.')
             return
         else:
@@ -220,7 +226,7 @@ async def add_to_list(ctx):
 
 # Request Clear list purges the list of all items
 # ======================================================================================================================
-@bot.command(name='clear', description='Clears the list of games.', pass_context=True)
+@bot.command(name='clear', description='Clears the list of games.', pass_context=True, category="List Actions")
 async def clear_list(ctx):
     print(str(datetime.datetime.now()) + ': clear_list executed')
     gameList.clear()
@@ -231,7 +237,8 @@ async def clear_list(ctx):
 
 # Request Game Selector command allows users to get a new game from gameList
 # ======================================================================================================================
-@bot.command(name='ng++', description='Selects a random game from the list.', pass_context=True)
+@bot.command(name='ng++', description='Selects a random game from the list.', pass_context=True,
+             category="List Actions")
 async def game_selector(ctx):
     print(str(datetime.datetime.now()) + ': game_selector executed')
     game = random.choice(gameList)
@@ -245,43 +252,45 @@ async def game_selector(ctx):
 # Request bot to Display New Game for each iteration of timer (one game per 24 hours)
 # ======================================================================================================================
 @bot.command(name='start', description='Selects a random game from the list on a daily basis',
-             pass_context=True)
+             pass_context=True, category="Bot Functions")
 async def daily_game(ctx):
     print(str(datetime.datetime.now()) + ': daily_game executed')
     global IS_TIMER_ACTIVE
     global TIMER_STOP
     IS_TIMER_ACTIVE = True
-    count = 0
-    game_otd = random.choice(gameList)
+    TIMER_STOP = False
+    dailyTimerDelta = datetime.timedelta(days=1)
+    dailyTimerStart = datetime.datetime.now()
+    game_otd = random.choice(gameList)  # game_otd = Game of the Day
     if game_otd == str('League of Legends'):
         game_otd = str(game_otd + ": " + random.choice(leagueGames))
 
     await ctx.send('The Game of the Day is ' + game_otd, delete_after=86400.0)
     print(str(datetime.datetime.now()) + ': New Daily Game sent! Starting new Daily Game Timer...')
 
-    while count < 86400:
-        await asyncio.sleep(1)
-        count = count + 0.9
-
+    while True:
+        await asyncio.sleep(0.9)
+        dailyTimerCheck = datetime.datetime.now() - dailyTimerStart
         if TIMER_STOP:
-            await ctx.send('Daily Game has been turned off.')
+            await ctx.send('Daily Game has been turned off.', delete_after=120.0)
             print(str(datetime.datetime.now()) + ': TIMER_STOP is True, exiting Daily Game Counter!')
             IS_TIMER_ACTIVE = False
             return
-        elif count >= 86400:
+        elif dailyTimerCheck >= dailyTimerDelta:
             print(str(datetime.datetime.now()) + ': Daily Game Timer complete...')
-            count = 0
             game_otd = random.choice(gameList)
             if game_otd == str('League of Legends'):
                 game_otd = str(game_otd + ": " + random.choice(leagueGames))
             await ctx.send('The Game of the Day is ' + game_otd, delete_after=86400.0)
             print(str(datetime.datetime.now()) + ': New Daily Game sent! Starting new Daily Game Timer...')
+            dailyTimerStart = datetime.datetime.now()
     return
 
 
 # Request Adds a specified game to the list
 # ======================================================================================================================
-@bot.command(name='show', description='Prints the contents of the current Game List', pass_context=True)
+@bot.command(name='show', description='Prints the contents of the current Game List', pass_context=True,
+             category="List Actions")
 async def show_list(ctx):
     print(str(datetime.datetime.now()) + ': show_list executed')
     item = 0
@@ -298,7 +307,8 @@ async def show_list(ctx):
 
 # Request Adds a specified game to the list
 # ======================================================================================================================
-@bot.command(name='remove', description='Removes a specified game from the list', pass_context=True)
+@bot.command(name='remove', description='Removes a specified game from the list', pass_context=True,
+             category="List Actions")
 async def delete_from_list(ctx):
     print(str(datetime.datetime.now()) + ': delete_from_list executed')
     await ctx.send('What game do you want to remove from the list?', delete_after=30.0)
@@ -320,7 +330,8 @@ async def delete_from_list(ctx):
 
 # Request rolls a random league of legends sub-game.
 # ======================================================================================================================
-@bot.command(name='league', description='Prints out a selection of which league sub-game to play', pass_context=True)
+@bot.command(name='league', description='Prints out a selection of which league sub-game to play', pass_context=True,
+             category="List Actions")
 async def league_sub_game(ctx):
     await ctx.send(random.choice(leagueGames), delete_after=60.0)
     return
@@ -328,23 +339,22 @@ async def league_sub_game(ctx):
 
 # Bot terminates itself.
 # ======================================================================================================================
-@bot.command(name='exit', description='Program Terminates.', pass_context=True)
+@bot.command(name='exit', description='Program Terminates.', pass_context=True, category="Bot Functions")
 async def terminate(ctx):
     global BOT_LOGOUT
     print(str(datetime.datetime.now()) + ': Shutdown executed!')
-    await ctx.send("Bravo Six, going Dark")
+    await ctx.send("Bravo Six, going Dark", delete_after=15.0)
     await bot.logout()
     print(str(datetime.datetime.now()) + ': Logout Completed. Closing Bot...')
     await bot.close()
     print(str(datetime.datetime.now()) + ': Bot Closed. Exiting...')
     BOT_LOGOUT = True
-
     return
 
 
 # Bot triggers TIMER_STOP to exit the daily game function loop.
 # ======================================================================================================================
-@bot.command(name='stop', description='Ends the daily timer.', pass_context=True)
+@bot.command(name='stop', description='Ends the daily timer.', pass_context=True, category="Bot Functions")
 async def stop_daily(ctx):
     global IS_TIMER_ACTIVE
     global TIMER_STOP
@@ -355,7 +365,7 @@ async def stop_daily(ctx):
         print(str(datetime.datetime.now()) + ': TIMER_STOP set to ' + str(TIMER_STOP) + '.')
         return
     else:
-        await ctx.send('The Daily Game timer is not active!')
+        await ctx.send('The Daily Game timer is not active!', delete_after=30.0)
         print(str(datetime.datetime.now()) + ': The Daily Timer is not active!')
         return
 
