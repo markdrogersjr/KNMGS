@@ -5,7 +5,7 @@ https://github.com/markdrogersjr/KNMGS
 Version: 0.4.0
 Written with Python 3.6
 Utilizes Discord.py 1.3.4
-https://github.com/Rapptz/discord.py
+https://github.com/Rapptz/discord.py 
 
 knmgs-public.py LICENSE TO USE:
     GPL-3.0
